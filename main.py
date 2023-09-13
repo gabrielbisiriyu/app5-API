@@ -15,7 +15,7 @@ def home():
 
 
 @app.route("/api/v1/<station>/<date>")
-def about(station,date):
+def temperature(station,date):
     # This allows the total digit to be up to 6 by adding extra zeros if necessary
     # So if we input 10 we will have 000010
     station=station.zfill(6) 
@@ -30,7 +30,26 @@ def about(station,date):
     temperature=df.loc[df['    DATE']==date]['TG0'].squeeze()
     return {"station":station,
             "date":date,
-            "temperature":temperature} 
+            "temperature":temperature}   
+
+@app.route("/api/v1/<station>")
+def all_data(station):
+    station=station.zfill(6) 
+    data="data/TG_STAID"+station+".txt"   
+    df=pd.read_csv(data,sep=',',skiprows=20,parse_dates=["    DATE"]) 
+    df['   TG']=df['   TG']/10 
+    result=df.to_dict(orient="records")
+    return result   
+
+@app.route("/api/v1/yearly/<station>/<year>") 
+def yearly(station,year):
+    station=station.zfill(6) 
+    data="data/TG_STAID"+station+".txt"   
+    df=pd.read_csv(data,sep=',',skiprows=20) 
+    # astype(str) converts the date column to string
+    df['    DATE'] = df['    DATE'].astype(str)
+    result=df[df['    DATE'].str.startswith(str(year))].to_dict(orient="records")
+    return result
 
 if __name__=="__main__":
     app.run(debug=True) 
